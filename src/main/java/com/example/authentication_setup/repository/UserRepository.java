@@ -5,5 +5,5 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.example.authentication_setup.entitty.user.User;
 
 public interface UserRepository extends JpaRepository<User, String> {
-        UserDetails findByLogin(String email);
+        UserDetails findByEmail(String email);
 }
