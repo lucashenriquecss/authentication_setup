@@ -27,11 +27,11 @@ public class SecurityConfigurations {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/forgot_password").permitAll()
-                        // .requestMatchers(HttpMethod.POST, "/NAME_ROUTER").hasRole("ADMIN") //restricted route for admin
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh_token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot_password").permitAll()
+                        // .requestMatchers(HttpMethod.GET, "/auth/forgot_password2").hasRole("ADMIN") //restricted route for admin
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

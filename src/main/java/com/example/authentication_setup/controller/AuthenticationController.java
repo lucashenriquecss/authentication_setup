@@ -1,21 +1,24 @@
 package com.example.authentication_setup.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.authentication_setup.entitty.user.AuthenticationDTO;
+import com.example.authentication_setup.entitty.user.LoginResponseDTO;
+import com.example.authentication_setup.entitty.user.RefreshTokenDTO;
 import com.example.authentication_setup.entitty.user.RegisterDTO;
 import com.example.authentication_setup.entitty.user.User;
+import com.example.authentication_setup.infra.security.TokenService;
 import com.example.authentication_setup.repository.UserRepository;
 
 @RestController
-@RequestMapping("auth")
+@RequestMapping("api/v1/auth")
 public class AuthenticationController {
      @Autowired
     private AuthenticationManager authenticationManager;
@@ -26,12 +29,20 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
+    
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        var token = tokenService.generateToken((User) auth.getPrincipal());
+        var tokenResponse = tokenService.generateToken((User) auth.getPrincipal());
 
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+        return ResponseEntity.ok(tokenResponse);
+        
+    }
+
+    @PostMapping("/refresh_token")
+    public ResponseEntity<LoginResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenDTO data) {
+        var tokenResponse = tokenService.generateRefreshToken(data.refreshToken());
+        return ResponseEntity.ok(tokenResponse);
     }
 
     @PostMapping("/register")
