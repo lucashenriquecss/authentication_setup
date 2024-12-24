@@ -3,6 +3,7 @@ package com.example.authentication_setup.infra.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.example.authentication_setup.dto.auth.LoginResponseDTO;
 import com.example.authentication_setup.entitty.user.User;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
@@ -15,7 +16,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import com.example.authentication_setup.entitty.user.LoginResponseDTO;
 import com.example.authentication_setup.repository.UserRepository;
 
 @Service
@@ -76,7 +76,7 @@ public class TokenService {
             if (user == null) {
                 throw new RuntimeException("User not found");
             }
-            
+
             return generateToken(user);
     
         } catch (JWTVerificationException exception) {

@@ -9,10 +9,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.authentication_setup.entitty.user.AuthenticationDTO;
-import com.example.authentication_setup.entitty.user.LoginResponseDTO;
-import com.example.authentication_setup.entitty.user.RefreshTokenDTO;
-import com.example.authentication_setup.entitty.user.RegisterDTO;
+import com.example.authentication_setup.dto.auth.AuthenticationDTO;
+import com.example.authentication_setup.dto.auth.LoginResponseDTO;
+import com.example.authentication_setup.dto.auth.RefreshTokenDTO;
+import com.example.authentication_setup.dto.auth.RegisterDTO;
 import com.example.authentication_setup.entitty.user.User;
 import com.example.authentication_setup.infra.security.TokenService;
 import com.example.authentication_setup.repository.UserRepository;
