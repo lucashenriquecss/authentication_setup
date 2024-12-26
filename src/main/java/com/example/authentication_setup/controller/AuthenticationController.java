@@ -1,63 +1,64 @@
 package com.example.authentication_setup.controller;
 
 import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import com.example.authentication_setup.dto.auth.AuthenticationDTO;
-import com.example.authentication_setup.dto.auth.LoginResponseDTO;
-import com.example.authentication_setup.dto.auth.RefreshTokenDTO;
-import com.example.authentication_setup.dto.auth.RegisterDTO;
-import com.example.authentication_setup.entitty.user.User;
-import com.example.authentication_setup.infra.security.TokenService;
-import com.example.authentication_setup.repository.UserRepository;
+import com.example.authentication_setup.dto.auth.*;
+import com.example.authentication_setup.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @RestController
-@RequestMapping("api/v1/auth")
+@RequestMapping("/api/v1/auth")
+@Tag(name = "Authentication", description = "Authentication management endpoints")
+@RequiredArgsConstructor
 public class AuthenticationController {
-     @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private UserRepository repository;
-    @Autowired
-    private TokenService tokenService;
-
-    @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid AuthenticationDTO data){
     
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
+    private final AuthenticationService authService;
 
-        var tokenResponse = tokenService.generateToken((User) auth.getPrincipal());
-
-        return ResponseEntity.ok(tokenResponse);
-        
+    @Operation(summary = "Authenticate user and generate tokens")
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO credentials) {
+        try {
+            LoginResponseDTO response = authService.authenticate(credentials);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
-    @PostMapping("/refresh_token")
-    public ResponseEntity<LoginResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenDTO data) {
-        var tokenResponse = tokenService.generateRefreshToken(data.refreshToken());
-        return ResponseEntity.ok(tokenResponse);
+    @Operation(summary = "Refresh authentication token")
+    @PostMapping("/refresh-token")
+    public ResponseEntity<LoginResponseDTO> refreshToken(@RequestBody @Valid RefreshTokenDTO refreshToken) {
+        try {
+            LoginResponseDTO response = authService.refreshToken(refreshToken.refreshToken());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
+    @Operation(summary = "Register new user")
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody @Valid RegisterDTO data){
-        if(this.repository.findByEmail(data.email()) != null) return ResponseEntity.badRequest().build();
-
-        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        User newUser = new User(data.email(), encryptedPassword, data.role(), data.name());
-
-        this.repository.save(newUser);
-
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterDTO registrationData) {
+        try {
+            authService.registerUser(registrationData);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
-    @PostMapping("/forgot_password")
-    public ResponseEntity forgotPassoword(){
-        return ResponseEntity.ok().build();
+
+    @Operation(summary = "Initialize password recovery process")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> initiatePasswordRecovery(@RequestBody @Valid ForgotPasswordDTO request) {
+        try {
+            authService.initiatePasswordRecovery(request.email());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }
