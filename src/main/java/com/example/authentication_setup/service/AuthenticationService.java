@@ -1,34 +1,41 @@
 package com.example.authentication_setup.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import com.example.authentication_setup.repository.UserRepository;
+import com.example.authentication_setup.dto.auth.AuthenticationDTO;
+import com.example.authentication_setup.dto.auth.LoginResponseDTO;
+import com.example.authentication_setup.dto.auth.RegisterDTO;
+import com.example.authentication_setup.entitty.user.User;
 import com.example.authentication_setup.exception.auth.*;
+import com.example.authentication_setup.infra.security.TokenService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService implements UserDetailsService {
 
     
-    private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final TokenService tokenService;
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private TokenService tokenService;
+    @Autowired
+    private UserRepository userRepository;
     
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
+        UserDetails user = userRepository.findByEmail(email);
         if (user == null) {
-            log.warn("User not found with email: {}", email);
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
         return user;
@@ -59,18 +66,18 @@ public class AuthenticationService implements UserDetailsService {
 
     @Transactional
     public void registerUser(RegisterDTO registrationData) {
-        validateRegistrationData(registrationData);
 
         if (userRepository.findByEmail(registrationData.email()) != null) {
             throw new UserAlreadyExistsException("Email already registered");
         }
 
+        String encryptedPassword = new BCryptPasswordEncoder().encode(registrationData.password());
+
         User newUser = User.builder()
             .email(registrationData.email())
-            .password(passwordEncoder.encode(registrationData.password()))
+            .password(encryptedPassword)
             .role(registrationData.role())
             .name(registrationData.name())
-            .createdAt(LocalDateTime.now())
             .isActive(true)
             .build();
 
@@ -79,7 +86,7 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     public void initiatePasswordRecovery(String email) {
-        User user = userRepository.findByEmail(email);
+        UserDetails user = userRepository.findByEmail(email);
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
