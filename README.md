@@ -12,6 +12,9 @@
 - OpenAPI and Swagger UI Documentation
 - Docker
 - PostgreSql
+- JUnit
+- Mockito
+  
 
 
 
